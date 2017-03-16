@@ -37,9 +37,8 @@ def learning_curve(classifier, y, train, cv, n=15):
         preds_train = classifier.fit_predict(y, train_subset, train_subset,
                                              show_steps=False)
         n_samples.append((i + 1)*chunk)
-        cv_losses.append(hinge_loss(y[cv], preds_cv, neg_label=0))
-        train_losses.append(hinge_loss(y[train_subset], preds_train,
-                            neg_label=0))
+        cv_losses.append(hinge_loss(y[cv], preds_cv))
+        train_losses.append(hinge_loss(y[train_subset], preds_train))
 
     classifier.cache_dir = previous_cache_dir
     plt.clf()

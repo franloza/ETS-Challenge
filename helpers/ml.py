@@ -29,8 +29,8 @@ from sklearn.metrics import roc_curve, auc
 from sklearn.grid_search import GridSearchCV
 from sklearn import cross_validation, linear_model
 
-from data import load_from_cache, get_dataset
-from utils import stringify, compute_auc
+from helpers.data import load_from_cache, get_dataset
+from helpers.utils import stringify, compute_auc
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ INITIAL_PARAMS = {
         'bootstrap': False,
     },
     'GradientBoostingClassifier': {
-        'n_estimators': N_TREES, 'learning_rate': .08, 'max_features': 7,
+        'n_estimators': N_TREES, 'learning_rate': .08, 'max_features': 4,
         'min_samples_leaf': 1, 'min_samples_split': 3, 'max_depth': 5,
     },
 }
@@ -192,8 +192,8 @@ class StackedClassifier(object):
             combination_results = pool.map(partial_compute_subset_auc, cb)
             best_subset_auc, best_subset_indices = max(
                 combination_results, key=itemgetter(0))
-            print "- best subset auc (%d models): %.4f > %s" % (
-                n, best_subset_auc, n, list(best_subset_indices))
+            print ( "- best subset auc (%d models): %.4f > %s" % (
+                n, best_subset_auc, n, list(best_subset_indices)))
             if best_subset_auc > best_auc:
                 best_auc = best_subset_auc
                 best_n = n

@@ -10,17 +10,14 @@ Author: Fran Lozano <fjlozanos@gmail.com>
 
 from __future__ import division
 
-import argparse
-import logging
-import numpy as np
+import logging,argparse
 
-from sklearn import svm, metrics, model_selection
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.model_selection import TimeSeriesSplit
+from sklearn import metrics, model_selection, linear_model, ensemble
 
-from helpers import diagnostics
-from helpers.data import load_data, save_results
 
+from helpers import ml
+from helpers.data import load_data
+from helpers.feature_extraction import create_datasets
 
 logging.basicConfig(format="[%(asctime)s] %(levelname)s\t%(message)s",
                     filename="history.log", filemode='a', level=logging.DEBUG,
@@ -46,22 +43,8 @@ def main(CONFIG):
     dataset, and c is the feature set and the variants to use.
     """
     SEED = 42
-    '''selected_models = [
-        "LR:tuples_sf",
-        "LR:greedy_sfl",
-        "LR:greedy2_sfl",
-        "LR:greedy3_sf",
-        "RFC:basic_b",
-        "RFC:tuples_f",
-        "RFC:tuples_fd",
-        "RFC:greedy_f",
-        "RFC:greedy2_f",
-        "GBC:basic_f",
-        "GBC:tuples_f",
-        "LR:greedy_sbl",
-        "GBC:greedy_c",
-        "GBC:tuples_cf",
-        #"RFC:effects_f",  # experimental; added after the competition
+    selected_models = [
+        "GBC:series",
     ]
 
     # Create the models on the fly
@@ -75,37 +58,42 @@ def main(CONFIG):
         model.set_params(random_state=SEED)
         models.append((model, dataset))
 
-    datasets = [dataset for model, dataset in models]'''
+    datasets = [dataset for model, dataset in models]
 
     logger.info("loading data")
     y, x = load_data('train.csv')
     x_test = load_data('test.csv', return_labels=False)
 
-    #logger.info("preparing datasets (use_cache=%s)", str(CONFIG.use_cache))
-    #create_datasets(x, x_test, y, datasets, CONFIG.use_cache)
+    logger.info("preparing datasets (use_cache=%s)", str(CONFIG.use_cache))
+    create_datasets(x, x_test, y, datasets, CONFIG.use_cache)
 
-    '''# Set params
+    # Set params
     for model, feature_set in models:
         model.set_params(**ml.find_params(model, feature_set, y,
                                           grid_search=CONFIG.grid_search))
     clf = ml.StackedClassifier(
         models, stack=CONFIG.stack, fwls=CONFIG.fwls,
         model_selection=CONFIG.model_selection,
-        use_cached_models=CONFIG.use_cache)'''
+        use_cached_models=CONFIG.use_cache)
 
-    #First model approach (Default GradientBoostingClassifier)
-    #Mean AUC: 0.51842
-    clf = GradientBoostingClassifier()
+    # Results
+    # Basic dataset
+    #GBC:basic - 5 fold: 0.54569
+    #LR:basic - 5 fold: 0.49412
+
+    #Series dataset
+    #GBC:series - 5 fold: 0.66144
+    #LR:series - 5 fold: 0.56682
+
 
     #  Metrics
     logger.info("computing cv score")
     mean_auc = 0.0
-    tscv = TimeSeriesSplit(n_splits=CONFIG.iter)
-    for i, (train, cv) in enumerate(tscv.split(x)):
-        #cv_preds = clf.fit_predict(y, train, cv, show_steps=CONFIG.verbose)
+    for i in range(CONFIG.iter):
+        train, cv = model_selection.train_test_split(
+            range(len(y)), test_size=.20, random_state=1 + i * SEED)
 
-        clf.fit(x[train], y[train])
-        cv_preds = clf.predict(x[cv])
+        cv_preds = clf.fit_predict(y, train, cv, show_steps=CONFIG.verbose)
 
         fpr, tpr, _ = metrics.roc_curve(y[cv], cv_preds)
         roc_auc = metrics.auc(fpr, tpr)
@@ -118,6 +106,7 @@ def main(CONFIG):
             diagnostics.plot_roc(fpr, tpr)'''
     if CONFIG.iter:
         logger.info("Mean AUC: %.5f",  mean_auc/CONFIG.iter)
+
 '''
     # Create submissions
     if CONFIG.outputfile:
