@@ -45,9 +45,9 @@ def save_results(predictions, filename):
     """Save results in CSV format."""
     logging.info("saving data to file %s", filename)
     with open("submissions/%s" % filename, 'w') as f:
-        f.write("id,ACTION\n")
-        for i, pred in enumerate(predictions):
-            f.write("%d,%f\n" % (i + 1, pred))
+        f.write("PROB\n")
+        for pred in predictions:
+            f.write("%f\n" % (pred))
 
 
 def save_dataset(filename, x, x_test, features=None, features_test=None):

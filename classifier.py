@@ -12,11 +12,11 @@ from __future__ import division
 
 import logging,argparse
 
-from sklearn import metrics, model_selection, linear_model, ensemble
+from sklearn import metrics, model_selection, linear_model, ensemble, neural_network
 
-
+from helpers import diagnostics
 from helpers import ml
-from helpers.data import load_data
+from helpers.data import load_data, save_results
 from helpers.feature_extraction import create_datasets
 
 logging.basicConfig(format="[%(asctime)s] %(levelname)s\t%(message)s",
@@ -44,7 +44,7 @@ def main(CONFIG):
     """
     SEED = 42
     selected_models = [
-        "GBC:series",
+        "GBC:expanded",
     ]
 
     # Create the models on the fly
@@ -54,11 +54,13 @@ def main(CONFIG):
         model = {'LR': linear_model.LogisticRegression,
                  'GBC': ensemble.GradientBoostingClassifier,
                  'RFC': ensemble.RandomForestClassifier,
+                 'MLP': neural_network.MLPClassifier,
                  'ETC': ensemble.ExtraTreesClassifier}[model_id]()
         model.set_params(random_state=SEED)
         models.append((model, dataset))
 
-    datasets = [dataset for model, dataset in models]
+    #datasets = [dataset for model, dataset in models]
+    datasets = ["basic", "residuals", "stats", "expanded"]
 
     logger.info("loading data")
     y, x = load_data('train.csv')
@@ -78,13 +80,19 @@ def main(CONFIG):
 
     # Results
     # Basic dataset
-    #GBC:basic - 5 fold: 0.54569
-    #LR:basic - 5 fold: 0.49412
+    #GBC:basic - 5 it: 0.54569
+    #LR:basic - 5 it: 0.49412
 
     #Series dataset
-    #GBC:series - 5 fold: 0.66144
-    #LR:series - 5 fold: 0.56682
+    #GBC:stats - 5 it: 0.76338
+    #MLP:stats - 5 it: 0.62772
+    #GBC:stats" + RFC:stats - 5 it: 0.73487
 
+    #Expanded dataset
+    # GBC:expanded - 5 it: 0.88390
+    # RFC:expanded - 5 it: 0.87114
+    # ETC:expanded - 5 it: 0.86704
+    # GBC + RFC:expanded - 5 it: 0.87741
 
     #  Metrics
     logger.info("computing cv score")
@@ -97,22 +105,23 @@ def main(CONFIG):
 
         fpr, tpr, _ = metrics.roc_curve(y[cv], cv_preds)
         roc_auc = metrics.auc(fpr, tpr)
-        logger.info("AUC (fold %d/%d): %.5f", i + 1, CONFIG.iter, roc_auc)
+        logger.info("AUC (it %d/%d): %.5f", i + 1, CONFIG.iter, roc_auc)
         mean_auc += roc_auc
-        '''
-        if CONFIG.diagnostics and i == 0:  # only plot for first fold
+
+        if CONFIG.diagnostics and i == 0:  # only plot for first it
             logger.info("plotting learning curve")
-            diagnostics.learning_curve(clf, y, train, cv)
-            diagnostics.plot_roc(fpr, tpr)'''
+            clf.use_cached_models = False
+            diagnostics.learning_curve(clf, y, train, cv, n=10)
+            clf.use_cached_models = True
+            diagnostics.plot_roc(fpr, tpr)
     if CONFIG.iter:
         logger.info("Mean AUC: %.5f",  mean_auc/CONFIG.iter)
 
-'''
     # Create submissions
     if CONFIG.outputfile:
         logger.info("making test submissions (CV AUC: %.4f)", mean_auc)
         preds = clf.fit_predict(y, show_steps=CONFIG.verbose)
-        save_results(preds, CONFIG.outputfile + ".csv")'''
+        save_results(preds, CONFIG.outputfile + ".csv")
 
 if __name__ == '__main__':
     PARSER = argparse.ArgumentParser(description="Parameters for the script.")

@@ -19,6 +19,8 @@ def plot_roc(fpr, tpr):
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title('ROC Curve')
+    plt.savefig('plots/roc_curve.png')
+    plt.show()
 
 
 def learning_curve(classifier, y, train, cv, n=15):

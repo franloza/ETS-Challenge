@@ -39,9 +39,9 @@ N_TREES = 500
 INITIAL_PARAMS = {
     'LogisticRegression': {'C': 2, 'penalty': 'l2', 'class_weight': 'auto'},
     'RandomForestClassifier': {
-        'n_estimators': N_TREES, 'n_jobs': 4,
+        'n_estimators': N_TREES, 'n_jobs': -1,
         'min_samples_leaf': 2, 'bootstrap': False,
-        'max_depth': 30, 'min_samples_split': 5, 'max_features': .1
+        'max_depth': 15, 'min_samples_split': 7, 'max_features': .1
     },
     'ExtraTreesClassifier': {
         'n_estimators': N_TREES, 'n_jobs': 3, 'min_samples_leaf': 2,
@@ -49,8 +49,16 @@ INITIAL_PARAMS = {
         'bootstrap': False,
     },
     'GradientBoostingClassifier': {
-        'n_estimators': N_TREES, 'learning_rate': .08, 'max_features': 4,
-        'min_samples_leaf': 1, 'min_samples_split': 3, 'max_depth': 5,
+        'n_estimators': N_TREES, 'learning_rate': .1, 'max_features': .1,
+        'min_samples_leaf': 1, 'min_samples_split': 3, 'max_depth': 13,
+    },
+    'MLPClassifier': {
+        'hidden_layer_sizes': (100, ), 'activation':'relu', 'solver':'adam',
+        'alpha':0.0001, 'batch_size': 'auto', 'learning_rate': 'constant',
+        'learning_rate_init': 0.001, 'power_t': 0.5, 'max_iter': 200,
+        'shuffle':True, 'random_state':None, 'tol':.0001, 'warm_start':False,
+        'momentum':0.9, 'nesterovs_momentum':True, 'early_stopping': False,
+        'validation_fraction': 0.1, 'beta_1':0.9, 'beta_2': 0.999, 'epsilon': 1e-08
     },
 }
 
@@ -59,7 +67,7 @@ PARAM_GRID = {
                            'class_weight': ['auto']},
     'RandomForestClassifier': {
         'n_jobs': [1], 'max_depth': [15, 20, 25, 30, 35, None],
-        'min_samples_split': [1, 3, 5, 7],
+        'min_samples_split': [3, 5, 7],
         'max_features': [3, 8, 11, 15],
     },
     'ExtraTreesClassifier': {'min_samples_leaf': [2, 3],
@@ -253,7 +261,7 @@ class StackedClassifier(object):
                 indexes_cv.extend(list(stack))
             stack_preds = np.array(stack_preds)[sp.argsort(indexes_cv)]
 
-            with open("cache/models/%s/cv_preds/%s%d.pkl" % (
+            with open("cache/models/%s/cv_preds/%s.pkl" % (
                     self.cache_dir, cache_file), 'wb') as f:
                 pickle.dump(stack_preds, f, pickle.HIGHEST_PROTOCOL)
 
