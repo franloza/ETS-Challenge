@@ -2,7 +2,7 @@ ETS Asset Management Factory Challenge 2017
 ===========================================
 
 This code was written by Paul Duan (<email@paulduan.com>) and Benjamin Solecki (<bensolucky@gmail.com>) and tuned to
-this challenge by Fran Lozano (<fjlozanos@gmail.com>).
+this challenge by Fran Lozano (<fjlozanos@gmail.com>). See [reference repository](https://github.com/pyduan/amazonaccess)
 It provides my solution to the ETS Asset Management Factory Challenge.
 
 Usage:
